@@ -1,0 +1,29 @@
+# Render Blueprint for Supabase
+services:
+  - type: web
+    name: supabase-core
+    env: docker
+    dockerfilePath: ./Dockerfile
+    plan: standard
+    healthCheckPath: /
+    envVars:
+      - key: POSTGRES_PASSWORD
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: SITE_URL
+        fromService:
+          type: web
+          name: supabase-core
+          property: url
+      - key: API_EXTERNAL_URL
+        fromService:
+          type: web
+          name: supabase-core
+          property: url
+      - key: DISABLE_SIGNUP
+        value: false
+    disk:
+      name: supabase-data
+      mountPath: /var/lib/postgresql/data
+      sizeGB: 10
