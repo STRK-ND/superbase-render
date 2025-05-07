@@ -1,117 +1,56 @@
-# Supabase for Render (Free Plan Compatible)
+# Supabase for Render Free Tier
 
-This is a streamlined Docker image for Supabase that includes core features and is optimized for deployment on Render's free plan. It combines the essential Supabase services (PostgreSQL, Auth, REST API, and API Gateway) into a single container for easier deployment while maintaining minimal resource usage to fit within Render's free tier limits.
+This repository contains a modified version of Supabase optimized to run on Render's free tier. It includes fallback mechanisms for component downloads and minimal resource usage configurations.
 
-## Features
+## Modifications
 
-- **PostgreSQL Database**: Full-featured PostgreSQL database with Supabase extensions
-- **Authentication (GoTrue)**: User management and authentication service
-- **REST API (PostgREST)**: Instant, RESTful API for your PostgreSQL database
-- **API Gateway (Kong)**: API management and routing
+- Optimized PostgreSQL configuration for low memory usage
+- Fallback mechanisms for Auth (formerly GoTrue), PostgREST, and Kong services
+- Reduced resource consumption for all components
+- Error handling for component downloads
 
-## Can I Run This on Render's Free Plan?
+## Deployment on Render
 
-**Yes!** This version of Supabase has been specifically optimized to run within Render's free plan limitations. The following optimizations have been made:
-
-1. **Reduced Memory Usage**: PostgreSQL configuration has been tuned to use minimal memory
-2. **Optimized Disk Usage**: Persistent storage reduced to 1GB to fit within free tier limits
-3. **Minimized Dependencies**: Only essential packages are installed to reduce container size
-4. **Resource-Efficient Configuration**: Services configured to use fewer workers and connections
-5. **Environment Variable Controls**: Memory allocation can be fine-tuned via environment variables
-
-## Local Development
-
-### Prerequisites
-
-- Docker and Docker Compose
-
-### Running Locally
-
-```bash
-# Clone the repository
-git clone <your-repo-url>
-cd supabase-render
-
-# Start the services
-docker-compose up -d
-```
-
-Once running, you can access:
-- API Gateway: http://localhost:8000
-- PostgreSQL: localhost:5432 (Username: postgres, Password: postgres)
-
-## Deploying to Render Free Plan
-
-### Option 1: Deploy using Render Blueprint
-
-1. Fork this repository to your GitHub account
+1. Fork this repository
 2. Create a new Web Service on Render
-3. Connect your GitHub repository
-4. Select "Docker" as the environment
-5. Select "Free" as the plan
-6. Configure the following environment variables:
-   - `POSTGRES_PASSWORD`: A secure password for PostgreSQL
-   - `JWT_SECRET`: A secure secret for JWT token generation
-   - `SITE_URL`: Your application's URL
-   - `API_EXTERNAL_URL`: Your Render service URL
-   - `POSTGRES_SHARED_BUFFERS`: Set to "128MB" for free plan (optional)
-   - `POSTGRES_EFFECTIVE_CACHE_SIZE`: Set to "256MB" for free plan (optional)
-   - `POSTGRES_WORK_MEM`: Set to "16MB" for free plan (optional)
-   - `POSTGRES_MAINTENANCE_WORK_MEM`: Set to "64MB" for free plan (optional)
-
-### Option 2: Deploy using Render's Docker Registry
-
-1. Build and push the Docker image to Render's Docker registry:
-
-```bash
-docker build -t registry.render.com/your-render-username/supabase-render .
-docker push registry.render.com/your-render-username/supabase-render
-```
-
-2. Create a new Web Service on Render using the pushed image
+3. Connect your forked repository
+4. Use the following settings:
+   - Environment: Docker
+   - Build Command: (leave empty)
+   - Start Command: (leave empty)
 
 ## Environment Variables
 
-| Variable | Description | Default |
-|----------|-------------|--------|
-| `POSTGRES_PASSWORD` | PostgreSQL password | postgres |
-| `JWT_SECRET` | Secret for JWT token generation | your-super-secret-jwt-token-with-at-least-32-characters-long |
-| `ANON_KEY` | Anonymous API key | (example key) |
-| `SERVICE_ROLE_KEY` | Service role API key | (example key) |
-| `SITE_URL` | Your application URL | http://localhost:3000 |
-| `API_EXTERNAL_URL` | External API URL | http://localhost:8000 |
-| `DISABLE_SIGNUP` | Disable user signup | false |
+You can customize the deployment by setting the following environment variables in Render:
 
-## Security Considerations
+- `POSTGRES_PASSWORD`: Password for PostgreSQL (default: postgres)
+- `JWT_SECRET`: Secret for JWT tokens (must be at least 32 characters)
+- `SITE_URL`: Your application URL
+- `API_EXTERNAL_URL`: External API URL
 
-- **Change Default Keys**: Replace all default keys and passwords before deploying to production
-- **Environment Variables**: Use Render's environment variables to securely store sensitive information
-- **Database Backups**: Set up regular database backups (note: automated backups are not available on the free plan)
-- **Resource Monitoring**: Monitor your application's resource usage to ensure it stays within free plan limits
+## Connecting to Cloudflare R2 Storage
+
+To use Cloudflare R2 Storage with this Supabase deployment:
+
+1. Create a Cloudflare R2 bucket
+2. Add the following environment variables to your Render service:
+   - `R2_ACCESS_KEY_ID`: Your Cloudflare R2 access key ID
+   - `R2_SECRET_ACCESS_KEY`: Your Cloudflare R2 secret access key
+   - `R2_BUCKET`: Your R2 bucket name
+   - `R2_ENDPOINT`: Your R2 endpoint URL (e.g., `https://<account_id>.r2.cloudflarestorage.com`)
 
 ## Limitations
 
-### Free Plan Limitations
+This deployment is optimized for Render's free tier and has the following limitations:
 
-When running on Render's free plan, be aware of these limitations:
+- Reduced performance compared to a full Supabase deployment
+- Limited storage capacity
+- Some features may be disabled or have reduced functionality
 
-- 512 MB memory limit
-- 0.1 CPU allocation
-- Automatic spin-down after 15 minutes of inactivity
-- 750 hours of runtime per month
-- 1 GB of persistent disk storage
+## Troubleshooting
 
-### Feature Limitations
+If you encounter issues with the deployment:
 
-This streamlined version includes only the core Supabase services. The following features are not included:
-
-- Storage API (for file storage)
-- Realtime API (for real-time subscriptions)
-- Edge Functions
-- Studio UI (admin dashboard)
-
-If you need these features, consider using the full Supabase platform or the complete self-hosted version on a paid Render plan.
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
+1. Check the Render logs for error messages
+2. Verify that all required environment variables are set correctly
+3. Ensure your Render service has sufficient resources allocated

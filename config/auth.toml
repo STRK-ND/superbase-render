@@ -1,0 +1,27 @@
+# Auth service configuration file (formerly GoTrue)
+# Modified for compatibility with Render free tier
+
+port = 9999
+api_host = "localhost"
+
+[database]
+driver = "postgres"
+url = "postgres://supabase_auth_admin:postgres@localhost:5432/postgres"
+
+[jwt]
+secret = "your-super-secret-jwt-token-with-at-least-32-characters-long"
+exp = 3600
+aud = "authenticated"
+default_group_name = "authenticated"
+admin_roles = ["service_role"]
+
+[external]
+email_enabled = true
+phone_enabled = true
+
+[mailer]
+autoconfirm = false
+secure_email_change_enabled = true
+
+[sms]
+autoconfirm = true
