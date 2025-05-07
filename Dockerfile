@@ -1,34 +1,35 @@
 FROM debian:bullseye-slim
 
-# Install dependencies
-RUN apt-get update && apt-get install -y \
+# Install dependencies (minimized for free plan)
+RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     curl \
     gnupg \
     lsb-release \
-    wget \
     && rm -rf /var/lib/apt/lists/*
 
-# Install PostgreSQL
+# Install PostgreSQL (optimized for low memory usage)
 RUN curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor -o /usr/share/keyrings/postgresql-keyring.gpg \
     && echo "deb [signed-by=/usr/share/keyrings/postgresql-keyring.gpg] http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/postgresql.list \
     && apt-get update \
-    && apt-get install -y postgresql-14 postgresql-contrib-14 \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install Node.js for GoTrue and other services
-RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash - \
-    && apt-get install -y nodejs \
+    && apt-get install -y --no-install-recommends postgresql-14 \
     && rm -rf /var/lib/apt/lists/*
 
 # Create a non-root user to run services
 RUN useradd -m -s /bin/bash supabase
 
-# Set up PostgreSQL
+# Set up PostgreSQL with optimized settings for low memory
 USER postgres
 RUN /etc/init.d/postgresql start && \
     psql --command "CREATE USER supabase_admin WITH SUPERUSER PASSWORD 'postgres';" && \
     createdb -O supabase_admin postgres && \
+    echo "shared_buffers = 128MB" >> /etc/postgresql/14/main/conf.d/custom.conf && \
+    echo "effective_cache_size = 256MB" >> /etc/postgresql/14/main/conf.d/custom.conf && \
+    echo "work_mem = 16MB" >> /etc/postgresql/14/main/conf.d/custom.conf && \
+    echo "maintenance_work_mem = 64MB" >> /etc/postgresql/14/main/conf.d/custom.conf && \
+    echo "max_connections = 20" >> /etc/postgresql/14/main/conf.d/custom.conf && \
+    echo "max_worker_processes = 2" >> /etc/postgresql/14/main/conf.d/custom.conf && \
+    echo "max_parallel_workers = 2" >> /etc/postgresql/14/main/conf.d/custom.conf && \
     /etc/init.d/postgresql stop
 
 # Copy configuration files
@@ -41,10 +42,10 @@ RUN curl -L https://github.com/supabase/gotrue/releases/download/v2.171.0/gotrue
 # Download and install PostgREST (REST API)
 RUN curl -L https://github.com/PostgREST/postgrest/releases/download/v12.2.11/postgrest-v12.2.11-linux-static-x64.tar.xz | tar xJ -C /usr/local/bin
 
-# Download and install Kong (API Gateway)
+# Download and install Kong (API Gateway) - minimized installation
 RUN curl -Lo kong.deb https://download.konghq.com/gateway-2.x-debian-buster/pool/all/k/kong/kong_2.8.1_amd64.deb \
     && apt-get update \
-    && apt-get install -y ./kong.deb \
+    && apt-get install -y --no-install-recommends ./kong.deb \
     && rm kong.deb \
     && rm -rf /var/lib/apt/lists/*
 
@@ -71,7 +72,11 @@ ENV POSTGRES_PASSWORD=postgres \
     PGRST_DB_SCHEMAS=public,storage,graphql_public \
     SITE_URL=http://localhost:3000 \
     DISABLE_SIGNUP=false \
-    API_EXTERNAL_URL=http://localhost:8000
+    API_EXTERNAL_URL=http://localhost:8000 \
+    POSTGRES_SHARED_BUFFERS=128MB \
+    POSTGRES_EFFECTIVE_CACHE_SIZE=256MB \
+    POSTGRES_WORK_MEM=16MB \
+    POSTGRES_MAINTENANCE_WORK_MEM=64MB
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s \
