@@ -1,0 +1,37 @@
+# Render Blueprint for Supabase (Free Plan Compatible)
+services:
+  - type: web
+    name: supabase-core
+    env: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    healthCheckPath: /
+    envVars:
+      - key: POSTGRES_PASSWORD
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: SITE_URL
+        fromService:
+          type: web
+          name: supabase-core
+          property: url
+      - key: API_EXTERNAL_URL
+        fromService:
+          type: web
+          name: supabase-core
+          property: url
+      - key: DISABLE_SIGNUP
+        value: false
+      - key: POSTGRES_SHARED_BUFFERS
+        value: "128MB"
+      - key: POSTGRES_EFFECTIVE_CACHE_SIZE
+        value: "256MB"
+      - key: POSTGRES_WORK_MEM
+        value: "16MB"
+      - key: POSTGRES_MAINTENANCE_WORK_MEM
+        value: "64MB"
+    disk:
+      name: supabase-data
+      mountPath: /var/lib/postgresql/data
+      sizeGB: 1
